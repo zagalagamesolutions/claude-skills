@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "msec-mcp": {
+      "type": "http",
+      "url": "https://msec-mcp-production.fly.dev/mcp"
+    }
+  }
+}
