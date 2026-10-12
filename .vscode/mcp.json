@@ -1,8 +1,9 @@
 {
   "servers": {
     "msec-mcp": {
-      "type": "http",
-      "url": "https://msec-mcp-production.fly.dev/mcp"
+      "type": "stdio",
+      "command": "node",
+      "args": ["C:\\github\\claude-skills\\tools\\msec-mcp-wrapper\\msec-mcp-wrapper.mjs"]
     }
   }
 }

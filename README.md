@@ -98,6 +98,46 @@ doesn't exist), then restart the CLI:
 }
 ```
 
+#### Workaround: VS Code asks for a Client ID (unofficial)
+
+> This section is not part of the upstream project. This is a fork of
+> [cd-training-courses/claude-skills](https://github.com/cd-training-courses/claude-skills);
+> the wrapper is a diagnostic aid and stopgap for an issue seen in VS Code, not a supported feature.
+
+On some VS Code setups, adding `msec-mcp` ends with VS Code asking you to type a
+"Client ID" instead of registering itself, and the `/authorize` request then
+carries whatever was typed (for example an email address) rather than an opaque
+`client_id` issued by `/register`. The server advertises dynamic client
+registration, so VS Code should not need to ask.
+
+[tools/msec-mcp-wrapper/msec-mcp-wrapper.mjs](tools/msec-mcp-wrapper/msec-mcp-wrapper.mjs)
+is a dependency-free Node 18+ script that runs the same flow itself
+(discovery, `POST /register`, PKCE `/authorize` with a loopback redirect,
+`/token`, refresh) and proxies MCP over stdio. Each step and HTTP status is
+logged to stderr, which shows where the flow breaks.
+
+```jsonc
+// .vscode/mcp.json, or MCP: Open User Configuration
+{
+  "servers": {
+    "msec-mcp": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["C:/path/to/claude-skills/tools/msec-mcp-wrapper/msec-mcp-wrapper.mjs"]
+    }
+  }
+}
+```
+
+- `node msec-mcp-wrapper.mjs --login` signs in from a terminal and prints each step.
+- `node msec-mcp-wrapper.mjs --logout` deletes the stored session.
+- The session is kept in `~/.msec-mcp-wrapper/state.json` (owner-only permissions where the OS supports it).
+- Set `MSEC_BASE_URL` to point it at a different server.
+- Remove any `msec-mcp` HTTP entry first, so the two do not conflict.
+
+The wrapper is untested against the production server's `/register` and `/token`
+bodies, so treat any failure it logs as evidence about the server, not a bug to hide.
+
 ### 2. Install the skills
 
 Copy the four folders under [skills/](skills/) into `~/.copilot/skills/` — on
@@ -217,7 +257,8 @@ third-party tooling, here's what a reviewer needs.
 
 Markdown and JSON only: four `SKILL.md` skill files, four optional VS Code prompt
 files, two Claude Code plugin manifests, one VS Code `mcp.json`, a README and a
-`.gitignore`. **No executable code, no scripts, no hooks.** This repository is
+`.gitignore`. **No executable code, no scripts, no hooks** (this fork adds one
+optional script, the VS Code workaround described above; upstream has none). This repository is
 public, so you can read all of it before installing.
 
 **What leaves your machine**
